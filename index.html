@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GameHub ‚Äì jogos HTML</title>
+<title>GameHub ñ jogos HTML</title>
 <style>
 :root{--bg:#f4f4f4;--card:#fff;--tx:#222;--mut:#777;--ac:#fa5c5c;--bd:#ddd;--hd:#222}
 @media(prefers-color-scheme:dark){:root{--bg:#1b1b1b;--card:#2a2a2a;--tx:#eee;--mut:#9a9a9a;--bd:#3a3a3a;--hd:#111}}
@@ -31,13 +31,14 @@ main{max-width:1100px;margin:0 auto;padding:20px}
 table{width:100%;border-collapse:collapse}td{padding:6px 0;border-bottom:1px solid var(--bd);font-size:14px}td:first-child{color:var(--mut)}
 label{display:block;margin:12px 0 4px;font-weight:600}.f input,.f select{width:100%}.r2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .stars{color:#f5b301}.msg{color:var(--ac);margin:8px 0}.desc{white-space:pre-wrap;line-height:1.6}
+.f input[type=checkbox]{width:auto;margin-top:3px}
 </style>
 </head>
 <body>
-<header><a class="logo" href="#/">üéÆ GameHub</a>
-<input id="hq" placeholder="Buscar jogos‚Ä¶" style="min-width:200px">
+<header><a class="logo" href="#/">?? GameHub</a>
+<input id="hq" placeholder="Buscar jogosÖ" style="min-width:200px">
 <nav id="nav"></nav></header>
-<main id="app">Carregando‚Ä¶</main>
+<main id="app">CarregandoÖ</main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -45,26 +46,26 @@ label{display:block;margin:12px 0 4px;font-weight:600}.f input,.f select{width:1
 // ====== CONFIG: cole os dados do seu projeto Supabase (Project Settings > API) ======
 const SB_URL = 'https://iujervnsbozespphjhcm.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml1amVydm5zYm96ZXNwcGhqaGNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwNTIwNDUsImV4cCI6MjA4OTYyODA0NX0.OUGDyjbUnqpHY48fOz0Ulzs57P2rYvZcEXMf-ivghMo';
-const MAX_ZIP_MB = 50; // limite padr√£o do plano gr√°tis do Supabase
-const GENRES = ['A√ß√£o','Aventura','Arcade','Puzzle','Plataforma','RPG','Estrat√©gia','Simula√ß√£o','Terror','Corrida','Esportes','Casual','Outro'];
-const STATUS = ['Lan√ßado','Em desenvolvimento','Prot√≥tipo','Jam'];
+const MAX_ZIP_MB = 50; // limite padr„o do plano gr·tis do Supabase
+const GENRES = ['AÁ„o','Aventura','Arcade','Puzzle','Plataforma','RPG','EstratÈgia','SimulaÁ„o','Terror','Corrida','Esportes','Casual','Outro'];
+const STATUS = ['LanÁado','Em desenvolvimento','ProtÛtipo','Jam'];
 // =====================================================================================
 const sb = supabase.createClient(SB_URL, SB_KEY);
 const app = document.getElementById('app');
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const money = p => p > 0 ? 'R$ ' + Number(p).toFixed(2).replace('.', ',') : 'Gr√°tis';
+const money = p => p > 0 ? 'R$ ' + Number(p).toFixed(2).replace('.', ',') : 'Gr·tis';
 const LINKS = ['Steam','Microsoft Store','Xbox','Epic Games','GOG','itch.io','Google Play','App Store','Nintendo eShop','PlayStation Store','Humble Store','Site oficial','Discord','YouTube','Twitter/X','Instagram','Outro'];
 const safeUrl = u => { try { return ['http:','https:'].includes(new URL(u).protocol); } catch (e) { return false; } };
 const ytId = u => (String(u || '').match(/(?:youtu\.be\/|v=|embed\/)([\w-]{11})/) || [])[1];
 const rmFile = async (bucket, url) => { try { const p = decodeURIComponent((url || '').split(`/object/public/${bucket}/`)[1] || ''); if (p) await sb.storage.from(bucket).remove([p]); } catch (e) {} };
-const friendly = e => { const m = e?.message || String(e); return /upstream connect|failed to fetch|networkerror|reset reason|111/i.test(m) ? 'N√£o foi poss√≠vel conectar ao Supabase. Veja se o projeto est√° pausado (Dashboard ‚Üí Restore project) e se a SB_URL est√° correta.' : m; };
-const stars = n => '‚òÖ'.repeat(Math.round(n)) + '‚òÜ'.repeat(5 - Math.round(n));
+const friendly = e => { const m = e?.message || String(e); return /upstream connect|failed to fetch|networkerror|reset reason|111/i.test(m) ? 'N„o foi possÌvel conectar ao Supabase. Veja se o projeto est· pausado (Dashboard ? Restore project) e se a SB_URL est· correta.' : m; };
+const stars = n => '?'.repeat(Math.round(n)) + '?'.repeat(5 - Math.round(n));
 let user = null, F = {q:'', genre:'', sort:'created_at'};
 
 function nav() {
   document.getElementById('nav').innerHTML = user
-    ? `<a class="btn" href="#/upload">+ Enviar jogo</a><a class="btn g" style="color:#fff" href="#/me">Meus jogos</a><button class="g btn" onclick="sb.auth.signOut()">Sair</button>`
-    : `<a class="btn" href="#/login">Entrar</a>`;
+    ? `<a class="btn" href="#/upload">+ Enviar jogo</a><a class="btn g" style="color:#fff" href="#/me">Meus jogos</a><a class="btn g" style="color:#fff;display:flex;align-items:center;gap:6px" href="#/settings">${me?.avatar_url ? `<img src="${esc(me.avatar_url)}" style="width:20px;height:20px;border-radius:50%;object-fit:cover">` : '?'} ${esc(uname())}</a><button class="g btn" style="color:#fff" onclick="sb.auth.signOut()">Sair</button>`
+    : `<a class="btn g" style="color:#fff" href="#/login">Entrar</a><a class="btn" href="#/register">Criar conta</a>`;
 }
 document.getElementById('hq').addEventListener('keydown', e => { if (e.key === 'Enter') { F.q = e.target.value; location.hash = '#/'; route(); } });
 
@@ -76,14 +77,20 @@ async function route() {
     if (page === 'upload') return user ? formPage() : (location.hash = '#/login');
     if (page === 'edit') return user ? formPage(id) : (location.hash = '#/login');
     if (page === 'me') return user ? await myGames() : (location.hash = '#/login');
+    if (['login', 'register', 'forgot'].includes(page) && user) return (location.hash = '#/');
     if (page === 'login') return loginPage();
+    if (page === 'register') return registerPage();
+    if (page === 'forgot') return forgotPage();
+    if (page === 'reset') return resetPage();
+    if (page === 'settings') return user ? await settingsPage(id) : (location.hash = '#/login');
+    if (page === 'u') return await profilePage(id);
     return await home();
   } catch (e) { app.innerHTML = `<div class="box msg">Erro: ${esc(friendly(e))}<br><small>Confira SB_URL / SB_KEY e se rodou setup.sql e update.sql.</small></div>`; }
 }
 
 const card = g => `<a class="card" href="#/game/${g.id}">${g.cover_url ? `<img loading="lazy" src="${esc(g.cover_url)}">` : '<div class="ph"></div>'}
 <div class="ct">${esc(g.title)}</div><div class="cs">${esc(g.tagline)}</div>
-<div class="cm">${esc(g.genre || '')} ¬∑ ${money(g.price)} ${g.zip_url ? ' ¬∑ ‚ñ∂ ' + g.plays : ' ¬∑ üöß Em breve'}</div></a>`;
+<div class="cm">${esc(g.genre || '')} ∑ ${money(g.price)} ${g.zip_url ? ' ∑ ? ' + g.plays : ' ∑ ?? Em breve'}</div></a>`;
 
 async function home() {
   let q = sb.from('games').select('*').order(F.sort, {ascending: false});
@@ -91,7 +98,7 @@ async function home() {
   if (F.q) q = q.ilike('title', `%${F.q}%`);
   const {data, error} = await q; if (error) throw error;
   app.innerHTML = `<div class="bar">
-  <select id="fg"><option value="">Todos os g√™neros</option>${GENRES.map(g => `<option ${F.genre === g ? 'selected' : ''}>${g}</option>`).join('')}</select>
+  <select id="fg"><option value="">Todos os gÍneros</option>${GENRES.map(g => `<option ${F.genre === g ? 'selected' : ''}>${g}</option>`).join('')}</select>
   <select id="fs"><option value="created_at">Mais recentes</option><option value="plays" ${F.sort === 'plays' ? 'selected' : ''}>Mais jogados</option></select></div>
   ${F.q ? `<p>Busca: <b>${esc(F.q)}</b> <a href="#/" onclick="F.q='';document.getElementById('hq').value=''">limpar</a></p>` : ''}
   <div class="grid">${data.map(card).join('') || '<p>Nenhum jogo ainda. Seja o primeiro a enviar!</p>'}</div>`;
@@ -106,35 +113,35 @@ async function gamePage(id) {
   const mine = user && g.user_id === user.id;
   const lnk = (g.links || []).filter(l => safeUrl(l.url));
   const yt = ytId(g.trailer_url);
-  const extra = `${lnk.length ? `<h4 style="margin:14px 0 6px">Tamb√©m dispon√≠vel em</h4>${lnk.map(l => `<a class="btn g" style="display:block;margin:4px 0;text-align:center" target="_blank" rel="noopener noreferrer nofollow" href="${esc(l.url)}">${esc(l.label)} ‚Üó</a>`).join('')}` : ''}
-  ${safeUrl(g.website) ? `<p><a class="btn g" style="display:block;text-align:center" target="_blank" rel="noopener noreferrer" href="${esc(g.website)}">üåê Site do jogo ‚Üó</a></p>` : ''}
-  ${g.support_email ? `<h4 style="margin:14px 0 6px">Suporte</h4><a style="color:var(--ac)" href="mailto:${esc(g.support_email)}">‚úâ ${esc(g.support_email)}</a>` : ''}`;
+  const extra = `${lnk.length ? `<h4 style="margin:14px 0 6px">TambÈm disponÌvel em</h4>${lnk.map(l => `<a class="btn g" style="display:block;margin:4px 0;text-align:center" target="_blank" rel="noopener noreferrer nofollow" href="${esc(l.url)}">${esc(l.label)} ?</a>`).join('')}` : ''}
+  ${safeUrl(g.website) ? `<p><a class="btn g" style="display:block;text-align:center" target="_blank" rel="noopener noreferrer" href="${esc(g.website)}">?? Site do jogo ?</a></p>` : ''}
+  ${g.support_email ? `<h4 style="margin:14px 0 6px">Suporte</h4><a style="color:var(--ac)" href="mailto:${esc(g.support_email)}">? ${esc(g.support_email)}</a>` : ''}`;
   app.innerHTML = `<h1 style="margin:0">${esc(g.title)}</h1><p class="cs">${esc(g.tagline)}</p>
   <div class="player" id="pl">${g.cover_url ? `<img src="${esc(g.cover_url)}">` : ''}
-    ${g.zip_url ? `<div class="play"><button id="pb" style="font-size:20px;padding:14px 30px">‚ñ∂ Jogar agora</button><small>${g.width}√ó${g.height}</small></div>`
-      : `<div class="play" style="background:rgba(0,0,0,.45)"><b style="font-size:22px">üöß Em breve</b><small>Este jogo ainda n√£o tem uma build jog√°vel.</small>${mine ? `<a class="btn" href="#/edit/${g.id}">Enviar a build agora</a>` : ''}</div>`}</div>
+    ${g.zip_url ? `<div class="play"><button id="pb" style="font-size:20px;padding:14px 30px">? Jogar agora</button><small>${g.width}◊${g.height}</small></div>`
+      : `<div class="play" style="background:rgba(0,0,0,.45)"><b style="font-size:22px">?? Em breve</b><small>Este jogo ainda n„o tem uma build jog·vel.</small>${mine ? `<a class="btn" href="#/edit/${g.id}">Enviar a build agora</a>` : ''}</div>`}</div>
   <div class="cols"><div>
-    <div class="box"><h3 style="margin-top:0">Sobre o jogo</h3><div class="desc">${esc(g.description) || '‚Äî'}</div></div>
+    <div class="box"><h3 style="margin-top:0">Sobre o jogo</h3><div class="desc">${esc(g.description) || 'ó'}</div></div>
     ${g.controls ? `<div class="box"><h3 style="margin-top:0">Controles</h3><div class="desc">${esc(g.controls)}</div></div>` : ''}
     ${yt ? `<div class="box"><h3 style="margin-top:0">Trailer</h3><iframe style="width:100%;aspect-ratio:16/9;border:0;border-radius:6px" src="https://www.youtube-nocookie.com/embed/${yt}" allowfullscreen></iframe></div>` : ''}
     ${g.screenshots?.length ? `<div class="box"><h3 style="margin-top:0">Capturas de tela</h3><div class="shots">${g.screenshots.map(s => `<img src="${esc(s)}" onclick="window.open(this.src)">`).join('')}</div></div>` : ''}
-    <div class="box"><h3 style="margin-top:0">Avalia√ß√µes (${rv.length}) <span class="stars">${avg ? stars(avg) + ' ' + avg.toFixed(1) : ''}</span></h3>
+    <div class="box"><h3 style="margin-top:0">AvaliaÁıes (${rv.length}) <span class="stars">${avg ? stars(avg) + ' ' + avg.toFixed(1) : ''}</span></h3>
     ${user ? `<select id="rs">${[5,4,3,2,1].map(n => `<option value="${n}">${stars(n)}</option>`).join('')}</select>
-    <textarea id="rc" placeholder="Seu coment√°rio‚Ä¶" style="min-height:70px;margin:8px 0"></textarea><button id="rb">Enviar avalia√ß√£o</button>` : '<p><a href="#/login" style="color:var(--ac)">Entre</a> para avaliar.</p>'}
+    <textarea id="rc" placeholder="Seu coment·rioÖ" style="min-height:70px;margin:8px 0"></textarea><button id="rb">Enviar avaliaÁ„o</button>` : '<p><a href="#/login" style="color:var(--ac)">Entre</a> para avaliar.</p>'}
     ${rv.map(r => `<div style="border-top:1px solid var(--bd);margin-top:12px;padding-top:8px"><b>${esc(r.username)}</b> <span class="stars">${stars(r.rating)}</span><div class="desc">${esc(r.comment)}</div></div>`).join('')}</div>
   </div><div>
     <div class="box"><table>
-    <tr><td>Autor</td><td>${esc(g.author)}</td></tr><tr><td>Pre√ßo</td><td>${money(g.price)}</td></tr>
-    <tr><td>G√™nero</td><td>${esc(g.genre)}</td></tr><tr><td>Status</td><td>${esc(g.status)}</td></tr>
-    <tr><td>Vers√£o</td><td>${esc(g.version) || '‚Äî'}</td></tr><tr><td>Plataforma</td><td>${esc(g.platform)}</td></tr>
-    ${g.languages ? `<tr><td>Idiomas</td><td>${esc(g.languages)}</td></tr>` : ''}${g.age_rating ? `<tr><td>Classifica√ß√£o</td><td>${esc(g.age_rating)}</td></tr>` : ''}<tr><td>Jogadas</td><td id="pc">${g.plays}</td></tr><tr><td>Publicado</td><td>${new Date(g.created_at).toLocaleDateString('pt-BR')}</td></tr></table>
+    <tr><td>Autor</td><td><a style="color:var(--ac)" href="#/u/${encodeURIComponent(g.author || '')}">${esc(g.author)}</a></td></tr><tr><td>PreÁo</td><td>${money(g.price)}</td></tr>
+    <tr><td>GÍnero</td><td>${esc(g.genre)}</td></tr><tr><td>Status</td><td>${esc(g.status)}</td></tr>
+    <tr><td>Vers„o</td><td>${esc(g.version) || 'ó'}</td></tr><tr><td>Plataforma</td><td>${esc(g.platform)}</td></tr>
+    ${g.languages ? `<tr><td>Idiomas</td><td>${esc(g.languages)}</td></tr>` : ''}${g.age_rating ? `<tr><td>ClassificaÁ„o</td><td>${esc(g.age_rating)}</td></tr>` : ''}<tr><td>Jogadas</td><td id="pc">${g.plays}</td></tr><tr><td>Publicado</td><td>${new Date(g.created_at).toLocaleDateString('pt-BR')}</td></tr></table>
     <div style="margin-top:10px">${(g.tags || []).map(t => `<span class="tag">${esc(t)}</span>`).join('')}</div>
-    ${mine && g.zip_url ? `<p><a class="btn g" href="${esc(g.zip_url)}" download>‚¨á Baixar .zip (s√≥ voc√™ v√™)</a></p>` : ''}
+    ${mine && g.zip_url ? `<p><a class="btn g" href="${esc(g.zip_url)}" download>? Baixar .zip (sÛ vocÍ vÍ)</a></p>` : ''}
     ${extra}
-    ${mine ? `<hr style="border:0;border-top:1px solid var(--bd);margin:14px 0"><a class="btn" href="#/edit/${g.id}">‚úé Editar jogo</a> <button class="g" style="color:var(--ac)" id="del">Excluir</button>` : ''}</div></div></div>`;
+    ${mine ? `<hr style="border:0;border-top:1px solid var(--bd);margin:14px 0"><a class="btn" href="#/edit/${g.id}">? Editar jogo</a> <button class="g" style="color:var(--ac)" id="del">Excluir</button>` : ''}</div></div></div>`;
   if (window.pb) pb.onclick = () => play(g);
   if (window.rb) rb.onclick = async () => {
-    const {error} = await sb.from('reviews').upsert({game_id: id, user_id: user.id, username: user.user_metadata?.name || user.email.split('@')[0], rating: +rs.value, comment: rc.value}, {onConflict: 'game_id,user_id'});
+    const {error} = await sb.from('reviews').upsert({game_id: id, user_id: user.id, username: uname(), rating: +rs.value, comment: rc.value}, {onConflict: 'game_id,user_id'});
     error ? alert(friendly(error)) : gamePage(id);
   };
   if (window.del) del.onclick = async () => { if (confirm('Excluir este jogo e seus arquivos?')) { const {error} = await sb.from('games').delete().eq('id', id); if (error) return alert(friendly(error)); await rmFile('covers', g.cover_url); await rmFile('games', g.zip_url); for (const s of g.screenshots || []) await rmFile('screens', s); location.hash = '#/me'; } };
@@ -143,17 +150,44 @@ async function gamePage(id) {
 // ---------- Executa o jogo: baixa o .zip, extrai no navegador e roda num iframe ----------
 const MIME = {html:'text/html',js:'text/javascript',mjs:'text/javascript',css:'text/css',json:'application/json',png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',gif:'image/gif',svg:'image/svg+xml',webp:'image/webp',mp3:'audio/mpeg',ogg:'audio/ogg',wav:'audio/wav',wasm:'application/wasm',woff:'font/woff',woff2:'font/woff2',ttf:'font/ttf',txt:'text/plain',mp4:'video/mp4',webm:'video/webm'};
 const resolve = (dir, rel) => decodeURIComponent(new URL(rel, 'http://x/' + dir).pathname.slice(1));
+async function swReady() {
+  if (!('serviceWorker' in navigator) || !window.isSecureContext || !window.caches) return false;
+  try {
+    await navigator.serviceWorker.register('sw.js');
+    await Promise.race([navigator.serviceWorker.ready, new Promise((_, rej) => setTimeout(rej, 4000))]);
+    return true;
+  } catch (e) { return false; }
+}
+function mount(g, {src, srcdoc}) {
+  document.getElementById('pl').innerHTML = `<iframe id="gf" style="width:${g.width}px;max-width:100%;height:${g.height}px;margin:0 auto" allow="fullscreen; autoplay; gamepad; accelerometer; gyroscope" sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-forms allow-popups allow-modals"></iframe>
+  <div style="padding:8px;background:#111"><button onclick="gf.requestFullscreen()">? Tela cheia</button></div>`;
+  const f = document.getElementById('gf'); src ? f.src = src : f.srcdoc = srcdoc;
+}
 async function play(g) {
-  pb.disabled = true; pb.textContent = 'Carregando‚Ä¶';
+  pb.disabled = true; pb.textContent = 'CarregandoÖ';
   try {
     sb.rpc('inc_plays', {gid: g.id}); pc.textContent = g.plays + 1;
     const zip = await JSZip.loadAsync(await (await fetch(g.zip_url)).arrayBuffer());
     const names = Object.keys(zip.files).filter(n => !zip.files[n].dir && !n.startsWith('__MACOSX'));
     const idx = names.filter(n => /(^|\/)index\.html$/i.test(n)).sort((a, b) => a.length - b.length)[0];
-    if (!idx) throw new Error('index.html n√£o encontrado no .zip');
+    if (!idx) throw new Error('index.html n„o encontrado no .zip');
     const base = idx.slice(0, idx.length - 'index.html'.length), M = {};
     const files = names.filter(n => n.startsWith(base));
-    for (const n of files) { // 1¬∫ tudo que n√£o √© CSS/HTML, 2¬∫ CSS (que referencia os outros)
+
+    // --- Caminho principal: Service Worker (jogo roda numa URL real, igual a um servidor) ---
+    if (await swReady()) {
+      const sid = Math.random().toString(36).slice(2, 10);
+      for (const k of await caches.keys()) if (k.startsWith('play-')) await caches.delete(k);
+      const cache = await caches.open('play-' + sid);
+      for (const n of files) {
+        const rel = n.slice(base.length), ext = rel.split('.').pop().toLowerCase();
+        await cache.put(new URL(`__play/${sid}/` + rel.split('/').map(encodeURIComponent).join('/'), location.href),
+          new Response(await zip.files[n].async('arraybuffer'), {headers: {'Content-Type': MIME[ext] || 'application/octet-stream'}}));
+      }
+      return mount(g, {src: new URL(`__play/${sid}/` + idx.slice(base.length).split('/').map(encodeURIComponent).join('/'), location.href).href});
+    }
+    // --- Alternativa (sem Service Worker): blob URLs + patch ---
+    for (const n of files) { // 1∫ tudo que n„o È CSS/HTML, 2∫ CSS (que referencia os outros)
       const ext = n.split('.').pop().toLowerCase(); if (ext === 'css' || n === idx) continue;
       M[n.slice(base.length)] = URL.createObjectURL(new Blob([await zip.files[n].async('arraybuffer')], {type: MIME[ext] || 'application/octet-stream'}));
     }
@@ -166,13 +200,10 @@ async function play(g) {
     doc.querySelectorAll('[src],[href]').forEach(el => ['src', 'href'].forEach(a => {
       const v = el.getAttribute(a); if (v && !/^(data:|https?:|blob:|#|\/\/)/.test(v) && M[resolve('', v.split(/[?#]/)[0])]) el.setAttribute(a, M[resolve('', v.split(/[?#]/)[0])]);
     }));
-    const patch = `<script>(()=>{const M=${JSON.stringify(M)};const n=u=>{if(typeof u!=='string'||/^(blob:|data:|https?:|\\/\\/)/.test(u))return u;let p=u.split(/[?#]/)[0].replace(/^(\\.\\/|\\/)+/,'');try{p=decodeURI(p)}catch(e){}return M[p]||u};const f=window.fetch;window.fetch=(a,b)=>f(typeof a==='string'?n(a):a,b);const o=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(m,u,...r){return o.call(this,m,n(u),...r)};const d=Object.getOwnPropertyDescriptor(HTMLImageElement.prototype,'src');Object.defineProperty(HTMLImageElement.prototype,'src',{set(v){d.set.call(this,n(v))},get(){return d.get.call(this)}})})()<\/script>`;
+    const patch = `<script>(()=>{const M=${JSON.stringify(M)};const n=u=>{if(typeof u!=='string'||/^(blob:|data:|https?:|\\/\\/)/.test(u))return u;let p=u.split(/[?#]/)[0].replace(/^(\\.\\/|\\/)+/,'');try{p=decodeURI(p)}catch(e){}return M[p]||u};const f=window.fetch;window.fetch=(a,b)=>f(typeof a==='string'?n(a):a,b);const o=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(m,u,...r){return o.call(this,m,n(u),...r)};const A=Element.prototype.setAttribute;Element.prototype.setAttribute=function(k,v){return A.call(this,k,/^(src|href|poster)$/.test(k)?n(v):v)};[HTMLImageElement,HTMLMediaElement,HTMLScriptElement,HTMLSourceElement].forEach(C=>{const dd=Object.getOwnPropertyDescriptor(C.prototype,'src');dd&&Object.defineProperty(C.prototype,'src',{configurable:true,enumerable:true,get:dd.get,set(v){dd.set.call(this,n(v))}})});const AU=window.Audio;window.Audio=function(u){const a=new AU();if(u)a.src=n(u);return a};window.Audio.prototype=AU.prototype})()<\/script>`;
     doc.head.insertAdjacentHTML('afterbegin', patch);
-    const pl = document.getElementById('pl');
-    pl.innerHTML = `<iframe id="gf" width="${g.width}" height="${g.height}" style="max-width:100%;height:${g.height}px" allow="fullscreen; autoplay; gamepad" sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-forms allow-popups"></iframe>
-    <div style="padding:8px;background:#111"><button onclick="gf.requestFullscreen()">‚õ∂ Tela cheia</button></div>`;
-    document.getElementById('gf').srcdoc = '<!doctype html>' + doc.documentElement.outerHTML;
-  } catch (e) { alert('Erro ao iniciar: ' + e.message); pb.disabled = false; pb.textContent = '‚ñ∂ Jogar agora'; }
+    mount(g, {srcdoc: '<!doctype html>' + doc.documentElement.outerHTML});
+  } catch (e) { alert('Erro ao iniciar: ' + e.message); pb.disabled = false; pb.textContent = '? Jogar agora'; }
 }
 
 // ---------- Criar / Editar ----------
@@ -182,42 +213,42 @@ async function formPage(id) {
   const E = !!g, v = (k, d = '') => esc(g?.[k] ?? d), $ = i => document.getElementById(i);
   const opts = (arr, cur) => arr.map(x => `<option ${x === cur ? 'selected' : ''}>${x}</option>`).join('');
   app.innerHTML = `<div class="box f"><h2 style="margin-top:0">${E ? 'Editar jogo' : 'Enviar novo jogo'}</h2>
-  <label>T√≠tulo *</label><input id="f-t" value="${v('title')}"><label>Frase curta</label><input id="f-tl" maxlength="100" value="${v('tagline')}">
-  <label>Descri√ß√£o</label><textarea id="f-d">${v('description')}</textarea>
-  <label>Controles (ex.: WASD mover, espa√ßo pular)</label><textarea id="f-c" style="min-height:60px">${v('controls')}</textarea>
-  <div class="r2"><div><label>G√™nero</label><select id="f-gn">${opts(GENRES, g?.genre)}</select></div>
+  <label>TÌtulo *</label><input id="f-t" value="${v('title')}"><label>Frase curta</label><input id="f-tl" maxlength="100" value="${v('tagline')}">
+  <label>DescriÁ„o</label><textarea id="f-d">${v('description')}</textarea>
+  <label>Controles (ex.: WASD mover, espaÁo pular)</label><textarea id="f-c" style="min-height:60px">${v('controls')}</textarea>
+  <div class="r2"><div><label>GÍnero</label><select id="f-gn">${opts(GENRES, g?.genre)}</select></div>
   <div><label>Status</label><select id="f-st">${opts(STATUS, g?.status)}</select></div>
-  <div><label>Vers√£o</label><input id="f-v" placeholder="1.0.0" value="${v('version')}"></div><div><label>Pre√ßo (R$, 0 = gr√°tis)</label><input id="f-p" type="number" min="0" step="0.01" value="${v('price', 0)}"></div>
+  <div><label>Vers„o</label><input id="f-v" placeholder="1.0.0" value="${v('version')}"></div><div><label>PreÁo (R$, 0 = gr·tis)</label><input id="f-p" type="number" min="0" step="0.01" value="${v('price', 0)}"></div>
   <div><label>Largura (px)</label><input id="f-w" type="number" value="${v('width', 960)}"></div><div><label>Altura (px)</label><input id="f-h" type="number" value="${v('height', 600)}"></div>
-  <div><label>Idiomas</label><input id="f-lg" placeholder="Portugu√™s, Ingl√™s" value="${v('languages')}"></div>
-  <div><label>Classifica√ß√£o et√°ria</label><select id="f-ar">${opts(['Livre','10+','12+','14+','16+','18+'], g?.age_rating)}</select></div></div>
-  <label>Tags (separadas por v√≠rgula)</label><input id="f-tg" placeholder="pixel art, singleplayer" value="${esc((g?.tags || []).join(', '))}">
+  <div><label>Idiomas</label><input id="f-lg" placeholder="PortuguÍs, InglÍs" value="${v('languages')}"></div>
+  <div><label>ClassificaÁ„o et·ria</label><select id="f-ar">${opts(['Livre','10+','12+','14+','16+','18+'], g?.age_rating)}</select></div></div>
+  <label>Tags (separadas por vÌrgula)</label><input id="f-tg" placeholder="pixel art, singleplayer" value="${esc((g?.tags || []).join(', '))}">
   <h3>Contato e links</h3>
   <label>E-mail de suporte</label><input id="f-se" type="email" placeholder="suporte@seusite.com" value="${v('support_email')}">
   <label>Site oficial</label><input id="f-ws" placeholder="https://" value="${v('website')}">
   <label>Trailer (link do YouTube)</label><input id="f-tr" placeholder="https://youtube.com/watch?v=..." value="${v('trailer_url')}">
-  <label>Tamb√©m dispon√≠vel em (Steam, Microsoft Store, etc.)</label><div id="f-lk"></div><button type="button" class="g btn" id="f-al" style="margin-top:6px">+ Adicionar link</button>
+  <label>TambÈm disponÌvel em (Steam, Microsoft Store, etc.)</label><div id="f-lk"></div><button type="button" class="g btn" id="f-al" style="margin-top:6px">+ Adicionar link</button>
   <h3>Arquivos</h3>
   <label>Capa ${E ? '(deixe vazio para manter a atual)' : '*'}</label>${E && g.cover_url ? `<img src="${esc(g.cover_url)}" style="height:80px;border-radius:6px;display:block;margin-bottom:6px">` : ''}<input id="f-cv" type="file" accept="image/*">
-  <label>Capturas de tela ${E ? '(as novas ser√£o adicionadas)' : ''}</label>
+  <label>Capturas de tela ${E ? '(as novas ser„o adicionadas)' : ''}</label>
   ${E && g.screenshots?.length ? `<div class="shots" style="margin-bottom:6px">${g.screenshots.map((s, i) => `<label style="font-weight:400;margin:0"><img src="${esc(s)}" style="height:80px"><br><input type="checkbox" class="f-rm" value="${i}"> remover</label>`).join('')}</div>` : ''}
   <input id="f-sc" type="file" accept="image/*" multiple>
   <label>Build do jogo (.zip com index.html) ${E && g.zip_url ? '(deixe vazio para manter a atual)' : '(opcional)'}</label><input id="f-zp" type="file" accept=".zip">
-  <p class="cs">Sem build, o jogo √© publicado como <b>üöß Em breve</b> (s√≥ a p√°gina, sem bot√£o de jogar). Voc√™ pode enviar a build depois, em "Editar".</p>
+  <p class="cs">Sem build, o jogo È publicado como <b>?? Em breve</b> (sÛ a p·gina, sem bot„o de jogar). VocÍ pode enviar a build depois, em "Editar".</p>
   ${E && g.zip_url ? `<label style="font-weight:400"><input type="checkbox" id="f-rz"> Remover a build atual (voltar para "Em breve")</label>` : ''}
-  <p class="cs">Limite do zip: ${MAX_ZIP_MB} MB.</p><div class="msg" id="f-m"></div><button id="f-b">${E ? 'Salvar altera√ß√µes' : 'Publicar'}</button> ${E ? `<a class="btn g" href="#/game/${id}">Cancelar</a>` : ''}</div>`;
+  <p class="cs">Limite do zip: ${MAX_ZIP_MB} MB.</p><div class="msg" id="f-m"></div><button id="f-b">${E ? 'Salvar alteraÁıes' : 'Publicar'}</button> ${E ? `<a class="btn g" href="#/game/${id}">Cancelar</a>` : ''}</div>`;
   const addLink = (l = 'Steam', u = '') => { const r = document.createElement('div'); r.style.cssText = 'display:flex;gap:6px;margin-top:6px';
-    r.innerHTML = `<select style="width:170px">${opts(LINKS, l)}</select><input placeholder="https://" value="${esc(u)}" style="flex:1"><button type="button" class="g btn">‚úï</button>`;
+    r.innerHTML = `<select style="width:170px">${opts(LINKS, l)}</select><input placeholder="https://" value="${esc(u)}" style="flex:1"><button type="button" class="g btn">?</button>`;
     r.querySelector('button').onclick = () => r.remove(); $('f-lk').appendChild(r); };
   (g?.links || []).forEach(l => addLink(l.label, l.url)); $('f-al').onclick = () => addLink();
   $('f-b').onclick = async () => {
     try {
       const cv = $('f-cv').files[0], zp = $('f-zp').files[0], msg = t => $('f-m').textContent = t;
-      if (!$('f-t').value.trim()) throw new Error('Informe o t√≠tulo.');
-      if (!E && !cv) throw new Error('A capa √© obrigat√≥ria.');
+      if (!$('f-t').value.trim()) throw new Error('Informe o tÌtulo.');
+      if (!E && !cv) throw new Error('A capa È obrigatÛria.');
       if (zp && zp.size > MAX_ZIP_MB * 1048576) throw new Error(`Zip maior que ${MAX_ZIP_MB} MB.`);
       const links = [...$('f-lk').children].map(r => ({label: r.querySelector('select').value, url: r.querySelector('input').value.trim()})).filter(l => l.url);
-      for (const u of [...links.map(l => l.url), $('f-ws').value.trim(), $('f-tr').value.trim()]) if (u && !safeUrl(u)) throw new Error('Link inv√°lido (use http:// ou https://): ' + u);
+      for (const u of [...links.map(l => l.url), $('f-ws').value.trim(), $('f-tr').value.trim()]) if (u && !safeUrl(u)) throw new Error('Link inv·lido (use http:// ou https://): ' + u);
       $('f-b').disabled = true;
       const up = async (bucket, f) => {
         const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 7)}-${f.name.replace(/[^\w.\-]/g, '_')}`;
@@ -230,12 +261,12 @@ async function formPage(id) {
       const oldCover = g?.cover_url, oldZip = g?.zip_url, removed = [];
       let shots = g?.screenshots || [];
       if (E) { const rm = [...document.querySelectorAll('.f-rm:checked')].map(c => +c.value); rm.forEach(i => removed.push(shots[i])); shots = shots.filter((_, i) => !rm.includes(i)); }
-      if (cv) { msg('Enviando capa‚Ä¶'); row.cover_url = await up('covers', cv); }
-      const files = [...$('f-sc').files]; for (const [i, f] of files.entries()) { msg(`Enviando capturas ${i + 1}/${files.length}‚Ä¶`); shots.push(await up('screens', f)); }
+      if (cv) { msg('Enviando capaÖ'); row.cover_url = await up('covers', cv); }
+      const files = [...$('f-sc').files]; for (const [i, f] of files.entries()) { msg(`Enviando capturas ${i + 1}/${files.length}Ö`); shots.push(await up('screens', f)); }
       row.screenshots = shots;
-      if (zp) { msg('Enviando zip‚Ä¶'); row.zip_url = await up('games', zp); } else if ($('f-rz')?.checked) row.zip_url = null;
-      msg('Salvando‚Ä¶');
-      const q = E ? sb.from('games').update(row).eq('id', id) : sb.from('games').insert({...row, author: user.user_metadata?.name || user.email.split('@')[0]});
+      if (zp) { msg('Enviando zipÖ'); row.zip_url = await up('games', zp); } else if ($('f-rz')?.checked) row.zip_url = null;
+      msg('SalvandoÖ');
+      const q = E ? sb.from('games').update(row).eq('id', id) : sb.from('games').insert({...row, author: uname()});
       const {data, error} = await q.select().single(); if (error) throw error;
       if (E) { if (cv) await rmFile('covers', oldCover); if (row.zip_url !== undefined) await rmFile('games', oldZip); for (const s of removed) await rmFile('screens', s); }
       location.hash = '#/game/' + data.id;
@@ -245,19 +276,188 @@ async function formPage(id) {
 
 async function myGames() {
   const {data} = await sb.from('games').select('*').eq('user_id', user.id).order('created_at', {ascending: false});
-  app.innerHTML = `<h2>Meus jogos</h2><div class="grid">${data.map(g => `<div>${card(g)}<a class="btn g" style="margin-top:6px" href="#/edit/${g.id}">‚úé Editar</a></div>`).join('') || '<p>Voc√™ ainda n√£o enviou nada.</p>'}</div>`;
+  app.innerHTML = `<h2>Meus jogos</h2><div class="grid">${data.map(g => `<div>${card(g)}<a class="btn g" style="margin-top:6px" href="#/edit/${g.id}">? Editar</a></div>`).join('') || '<p>VocÍ ainda n„o enviou nada.</p>'}</div>`;
 }
+
+// ================= CONTAS =================
+let me = null; // perfil (tabela profiles)
+const $ = i => document.getElementById(i);
+const flash = (id, msg, ok) => { const e = $(id); e.style.color = ok ? '#2a9d4a' : 'var(--ac)'; e.textContent = msg; };
+const uname = () => me?.username || user?.user_metadata?.username || user?.user_metadata?.name || user?.email?.split('@')[0] || '';
+const USER_RE = /^[a-z0-9_]{3,20}$/;
+const pwOk = (p, c) => p.length < 8 ? 'A senha precisa ter pelo menos 8 caracteres.' : (!/[a-zA-Z]/.test(p) || !/\d/.test(p)) ? 'Use letras e n˙meros na senha.' : p !== c ? 'As senhas n„o coincidem.' : '';
+const strength = p => { let n = 0; if (p.length >= 8) n++; if (p.length >= 12) n++; if (/[a-z]/.test(p) && /[A-Z]/.test(p)) n++; if (/\d/.test(p)) n++; if (/[^\w]/.test(p)) n++; return ['Muito fraca', 'Fraca', 'Razo·vel', 'Boa', 'Forte', 'Excelente'][n]; };
+const authErr = e => { const m = e?.message || ''; return /Invalid login/i.test(m) ? 'E-mail ou senha incorretos.' : /already registered/i.test(m) ? 'Este e-mail j· est· cadastrado.' : /rate limit|too many|security purposes/i.test(m) ? 'Muitas tentativas. Aguarde alguns minutos.' : /same password|different from the old/i.test(m) ? 'A nova senha deve ser diferente da atual.' : friendly(e); };
+const taken = async (name, except) => { const {data} = await sb.from('profiles').select('id').eq('username', name).maybeSingle(); return !!data && data.id !== except; };
+const pwField = (id, label, meter) => `<label>${label}</label><div style="position:relative"><input id="${id}" type="password" autocomplete="${id.endsWith('-c') ? 'current-password' : 'new-password'}" style="width:100%;padding-right:46px"><button type="button" data-t="${id}" class="g btn" style="position:absolute;right:3px;top:3px;padding:5px 8px">??</button></div>${meter ? `<small class="cs" id="${id}-s"></small>` : ''}`;
+const meter = id => { $(id).oninput = e => $(id + '-s').textContent = e.target.value ? 'ForÁa: ' + strength(e.target.value) : ''; };
+const box = (title, body, w = 420) => `<div class="box f" style="max-width:${w}px;margin:30px auto"><h2 style="margin-top:0">${title}</h2>${body}</div>`;
+const avatar = (p, s = 80) => p?.avatar_url ? `<img src="${esc(p.avatar_url)}" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover">` : `<div style="width:${s}px;height:${s}px;border-radius:50%;background:var(--ac);color:#fff;display:flex;align-items:center;justify-content:center;font-size:${s * .4}px;font-weight:700">${esc((p?.username || '?')[0].toUpperCase())}</div>`;
+const lnk = (h, t) => `<a href="${h}" style="color:var(--ac)">${t}</a>`;
+document.addEventListener('click', e => { const b = e.target.closest('[data-t]'); if (b) { const i = $(b.dataset.t); i.type = i.type === 'password' ? 'text' : 'password'; } });
+const onEnter = (ids, fn) => ids.forEach(i => $(i).addEventListener('keydown', e => e.key === 'Enter' && fn()));
 
 function loginPage() {
-  app.innerHTML = `<div class="box f" style="max-width:380px;margin:auto"><h2 style="margin-top:0">Entrar / Criar conta</h2>
-  <label>Nome de usu√°rio (s√≥ no cadastro)</label><input id="ln"><label>E-mail</label><input id="le" type="email"><label>Senha</label><input id="lp" type="password">
-  <div class="msg" id="lm"></div><button id="li">Entrar</button> <button class="g" id="ls">Criar conta</button></div>`;
-  li.onclick = async () => { const {error} = await sb.auth.signInWithPassword({email: le.value, password: lp.value}); error ? lm.textContent = error.message : location.hash = '#/'; };
-  ls.onclick = async () => { const {error} = await sb.auth.signUp({email: le.value, password: lp.value, options: {data: {name: ln.value || le.value.split('@')[0]}}});
-    lm.textContent = error ? error.message : 'Conta criada! Se pediu confirma√ß√£o, verifique seu e-mail.'; };
+  app.innerHTML = box('Entrar', `<label>E-mail</label><input id="l-e" type="email" autocomplete="email">${pwField('l-c', 'Senha')}
+  <p style="text-align:right;margin:6px 0">${lnk('#/forgot', 'Esqueci minha senha')}</p><div class="msg" id="l-m"></div>
+  <button id="l-b" style="width:100%">Entrar</button><p class="cs" style="text-align:center">Ainda n„o tem conta? ${lnk('#/register', 'Criar conta')}</p>`);
+  const go = async () => {
+    const email = $('l-e').value.trim(), pw = $('l-c').value;
+    if (!email || !pw) return flash('l-m', 'Preencha e-mail e senha.');
+    $('l-b').disabled = true;
+    const {error} = await sb.auth.signInWithPassword({email, password: pw});
+    $('l-b').disabled = false;
+    if (!error) return (location.hash = '#/');
+    if (/not confirmed/i.test(error.message)) {
+      $('l-m').innerHTML = 'Confirme seu e-mail antes de entrar. <a href="#" id="l-r" style="text-decoration:underline">Reenviar e-mail</a>';
+      $('l-r').onclick = async ev => { ev.preventDefault(); await sb.auth.resend({type: 'signup', email}); flash('l-m', 'E-mail de confirmaÁ„o reenviado.', 1); };
+    } else flash('l-m', authErr(error));
+  };
+  $('l-b').onclick = go; onEnter(['l-e', 'l-c'], go);
 }
 
-sb.auth.onAuthStateChange((_e, s) => { user = s?.user || null; nav(); route(); });
+function registerPage() {
+  app.innerHTML = box('Criar conta', `<label>Nome de usu·rio</label><input id="r-u" autocomplete="username" placeholder="meu_estudio"><small class="cs" id="r-um">3ñ20 caracteres: letras min˙sculas, n˙meros e _</small>
+  <label>E-mail</label><input id="r-e" type="email" autocomplete="email">${pwField('r-p', 'Senha', 1)}${pwField('r-r', 'Confirmar senha')}
+  <label style="font-weight:400;display:flex;gap:8px;align-items:flex-start;margin-top:14px"><input type="checkbox" id="r-t"> <span>Li e aceito os termos de uso e a polÌtica de privacidade.</span></label>
+  <div class="msg" id="r-m"></div><button id="r-b" style="width:100%">Criar conta</button><p class="cs" style="text-align:center">J· tem conta? ${lnk('#/login', 'Entrar')}</p>`);
+  meter('r-p');
+  $('r-u').onblur = async () => { const n = $('r-u').value.trim().toLowerCase(); if (!n) return; const m = $('r-um');
+    if (!USER_RE.test(n)) { m.style.color = 'var(--ac)'; m.textContent = 'Use 3ñ20 caracteres: letras min˙sculas, n˙meros e _.'; }
+    else if (await taken(n)) { m.style.color = 'var(--ac)'; m.textContent = 'Este nome de usu·rio j· est· em uso.'; }
+    else { m.style.color = '#2a9d4a'; m.textContent = '? DisponÌvel'; } };
+  const go = async () => {
+    try {
+      const username = $('r-u').value.trim().toLowerCase(), email = $('r-e').value.trim(), pw = $('r-p').value;
+      if (!USER_RE.test(username)) throw new Error('Nome de usu·rio inv·lido: 3ñ20 caracteres, letras min˙sculas, n˙meros e _.');
+      if (!/^\S+@\S+\.\S+$/.test(email)) throw new Error('Informe um e-mail v·lido.');
+      const pe = pwOk(pw, $('r-r').value); if (pe) throw new Error(pe);
+      if (!$('r-t').checked) throw new Error('Aceite os termos para continuar.');
+      $('r-b').disabled = true;
+      if (await taken(username)) throw new Error('Este nome de usu·rio j· est· em uso.');
+      const {data, error} = await sb.auth.signUp({email, password: pw, options: {data: {username}, emailRedirectTo: location.origin + location.pathname}});
+      if (error) throw error;
+      if (data.user && data.user.identities?.length === 0) throw new Error('Este e-mail j· est· cadastrado. Entre ou recupere a senha.');
+      if (!data.session) app.innerHTML = box('Confira seu e-mail ??', `<p>Enviamos um link de confirmaÁ„o para <b>${esc(email)}</b>. Clique nele para ativar sua conta e depois entre.</p><a class="btn" href="#/login">Ir para o login</a>`);
+      else location.hash = '#/';
+    } catch (e) { flash('r-m', authErr(e)); $('r-b').disabled = false; }
+  };
+  $('r-b').onclick = go; onEnter(['r-u', 'r-e', 'r-p', 'r-r'], go);
+}
+
+function forgotPage() {
+  app.innerHTML = box('Recuperar senha', `<p class="cs">Informe seu e-mail e enviaremos um link para criar uma nova senha.</p><label>E-mail</label><input id="f-e" type="email">
+  <div class="msg" id="f-m"></div><button id="f-b" style="width:100%">Enviar link</button><p class="cs" style="text-align:center">${lnk('#/login', '? Voltar ao login')}</p>`);
+  const go = async () => {
+    const email = $('f-e').value.trim(); if (!email) return flash('f-m', 'Informe seu e-mail.');
+    $('f-b').disabled = true;
+    const {error} = await sb.auth.resetPasswordForEmail(email, {redirectTo: location.origin + location.pathname});
+    $('f-b').disabled = false;
+    error ? flash('f-m', authErr(error)) : flash('f-m', 'Se este e-mail estiver cadastrado, vocÍ receber· o link em instantes.', 1);
+  };
+  $('f-b').onclick = go; onEnter(['f-e'], go);
+}
+
+function resetPage() {
+  if (!user) return (app.innerHTML = box('Link inv·lido ou expirado', `<p>PeÁa um novo link de recuperaÁ„o.</p><a class="btn" href="#/forgot">Recuperar senha</a>`));
+  app.innerHTML = box('Criar nova senha', `${pwField('n-p', 'Nova senha', 1)}${pwField('n-r', 'Confirmar nova senha')}<div class="msg" id="n-m"></div><button id="n-b" style="width:100%">Salvar nova senha</button>`);
+  meter('n-p');
+  const go = async () => {
+    const pe = pwOk($('n-p').value, $('n-r').value); if (pe) return flash('n-m', pe);
+    const {error} = await sb.auth.updateUser({password: $('n-p').value});
+    error ? flash('n-m', authErr(error)) : (flash('n-m', 'Senha alterada! RedirecionandoÖ', 1), setTimeout(() => location.hash = '#/', 1200));
+  };
+  $('n-b').onclick = go; onEnter(['n-p', 'n-r'], go);
+}
+
+async function profilePage(name) {
+  const {data: p} = await sb.from('profiles').select('*').eq('username', decodeURIComponent(name || '')).maybeSingle();
+  if (!p) return (app.innerHTML = '<div class="box">Usu·rio n„o encontrado.</div>');
+  const {data: gs} = await sb.from('games').select('*').eq('user_id', p.id).order('created_at', {ascending: false});
+  app.innerHTML = `<div class="box" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">${avatar(p, 90)}<div><h2 style="margin:0">${esc(p.display_name || p.username)}</h2>
+  <div class="cs">@${esc(p.username)} ∑ membro desde ${new Date(p.created_at).toLocaleDateString('pt-BR')}</div><div class="desc" style="margin-top:6px">${esc(p.bio)}</div>
+  ${safeUrl(p.website) ? `<a style="color:var(--ac)" target="_blank" rel="noopener noreferrer nofollow" href="${esc(p.website)}">?? ${esc(p.website)}</a>` : ''}</div></div>
+  <h3>Jogos (${gs.length})</h3><div class="grid">${gs.map(card).join('') || '<p>Nenhum jogo publicado.</p>'}</div>`;
+}
+
+async function settingsPage(tab) {
+  if (!['profile', 'security', 'account'].includes(tab)) tab = 'profile';
+  const T = [['profile', 'Perfil'], ['security', 'SeguranÁa'], ['account', 'Conta']];
+  const wrap = body => app.innerHTML = `<h2 style="margin-top:0">ConfiguraÁıes da conta</h2><div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap">${T.map(([k, l]) => `<a class="btn ${k === tab ? '' : 'g'}" href="#/settings/${k}">${l}</a>`).join('')}</div><div class="box f" style="max-width:560px">${body}</div>`;
+  const hr = '<hr style="border:0;border-top:1px solid var(--bd);margin:22px 0">';
+  if (tab === 'profile') {
+    const p = me || {username: uname().toLowerCase().replace(/[^a-z0-9_]/g, '')};
+    wrap(`<div style="display:flex;gap:14px;align-items:center">${avatar(p)}<div style="flex:1"><label style="margin-top:0">Foto de perfil (m·x. 2 MB)</label><input id="s-a" type="file" accept="image/*"></div></div>
+    <label>Nome de usu·rio</label><input id="s-u" value="${esc(p.username)}"><small class="cs">Letras min˙sculas, n˙meros e _ (3ñ20). Sua p·gina: #/u/${esc(p.username)}</small>
+    <label>Nome de exibiÁ„o</label><input id="s-n" value="${esc(p.display_name)}"><label>Bio</label><textarea id="s-b" style="min-height:90px">${esc(p.bio)}</textarea>
+    <label>Site</label><input id="s-w" placeholder="https://" value="${esc(p.website)}"><div class="msg" id="s-m"></div><button id="s-s">Salvar perfil</button>`);
+    $('s-s').onclick = async () => {
+      try {
+        $('s-s').disabled = true;
+        const name = $('s-u').value.trim().toLowerCase(), site = $('s-w').value.trim();
+        if (!USER_RE.test(name)) throw new Error('Usu·rio: 3ñ20 caracteres, letras min˙sculas, n˙meros e _.');
+        if (site && !safeUrl(site)) throw new Error('O site precisa comeÁar com http:// ou https://');
+        if (name !== p.username && await taken(name, user.id)) throw new Error('Este nome de usu·rio j· est· em uso.');
+        let av = p.avatar_url; const f = $('s-a').files[0];
+        if (f) { if (f.size > 2 * 1048576) throw new Error('A foto deve ter no m·ximo 2 MB.');
+          const path = `${user.id}/${Date.now()}-${f.name.replace(/[^\w.\-]/g, '_')}`;
+          const {error: ue} = await sb.storage.from('avatars').upload(path, f, {contentType: f.type}); if (ue) throw ue;
+          const old = av; av = sb.storage.from('avatars').getPublicUrl(path).data.publicUrl; if (old) await rmFile('avatars', old); }
+        const row = {id: user.id, username: name, display_name: $('s-n').value.trim(), bio: $('s-b').value, website: site, avatar_url: av};
+        const {error} = await sb.from('profiles').upsert(row); if (error) throw error;
+        if (name !== p.username) { await sb.from('games').update({author: name}).eq('user_id', user.id); await sb.from('reviews').update({username: name}).eq('user_id', user.id); }
+        me = {...me, ...row}; nav(); flash('s-m', 'Perfil salvo!', 1);
+      } catch (e) { flash('s-m', authErr(e)); }
+      $('s-s').disabled = false;
+    };
+  } else if (tab === 'security') {
+    wrap(`<h3 style="margin-top:0">E-mail</h3><p class="cs">Atual: <b>${esc(user.email)}</b></p><label>Novo e-mail</label><input id="e-n" type="email"><div class="msg" id="e-m"></div><button id="e-b">Alterar e-mail</button>${hr}
+    <h3>Senha</h3>${pwField('p-c', 'Senha atual')}${pwField('p-n', 'Nova senha', 1)}${pwField('p-r', 'Confirmar nova senha')}<div class="msg" id="p-m"></div><button id="p-b">Alterar senha</button>`);
+    meter('p-n');
+    $('e-b').onclick = async () => {
+      const email = $('e-n').value.trim(); if (!/^\S+@\S+\.\S+$/.test(email)) return flash('e-m', 'Informe um e-mail v·lido.');
+      const {error} = await sb.auth.updateUser({email}, {emailRedirectTo: location.origin + location.pathname});
+      error ? flash('e-m', authErr(error)) : flash('e-m', 'Enviamos um link de confirmaÁ„o. O e-mail sÛ muda depois que vocÍ confirmar.', 1);
+    };
+    $('p-b').onclick = async () => {
+      const pe = pwOk($('p-n').value, $('p-r').value); if (!$('p-c').value) return flash('p-m', 'Informe sua senha atual.'); if (pe) return flash('p-m', pe);
+      $('p-b').disabled = true;
+      const {error: ce} = await sb.auth.signInWithPassword({email: user.email, password: $('p-c').value});
+      if (ce) { $('p-b').disabled = false; return flash('p-m', 'Senha atual incorreta.'); }
+      const {error} = await sb.auth.updateUser({password: $('p-n').value}); $('p-b').disabled = false;
+      error ? flash('p-m', authErr(error)) : (['p-c', 'p-n', 'p-r'].forEach(i => $(i).value = ''), flash('p-m', 'Senha alterada com sucesso!', 1));
+    };
+  } else {
+    wrap(`<h3 style="margin-top:0">Sessıes</h3><p class="cs">Encerra seu login em todos os navegadores e dispositivos.</p><button class="g btn" id="a-o">Sair de todos os dispositivos</button>${hr}
+    <h3 style="color:var(--ac)">Excluir conta</h3><p class="cs">Apaga para sempre sua conta, seus jogos, arquivos e avaliaÁıes. N„o d· para desfazer.</p>
+    <label>Digite <b>${esc(uname())}</b> para confirmar</label><input id="a-c"><div class="msg" id="a-m"></div><button id="a-d" style="background:#c0392b">Excluir minha conta</button>`);
+    $('a-o').onclick = async () => { await sb.auth.signOut({scope: 'global'}); location.hash = '#/login'; };
+    $('a-d').onclick = async () => {
+      try {
+        if ($('a-c').value.trim() !== uname()) throw new Error('O nome digitado n„o confere.');
+        if (!confirm('⁄ltima confirmaÁ„o: excluir sua conta e todos os seus jogos?')) return;
+        $('a-d').disabled = true;
+        const {data: gs} = await sb.from('games').select('cover_url,zip_url,screenshots').eq('user_id', user.id);
+        for (const g of gs || []) { await rmFile('covers', g.cover_url); await rmFile('games', g.zip_url); for (const s of g.screenshots || []) await rmFile('screens', s); }
+        await rmFile('avatars', me?.avatar_url);
+        const {error} = await sb.rpc('delete_my_account'); if (error) throw error;
+        await sb.auth.signOut({scope: 'local'}); location.hash = '#/';
+      } catch (e) { flash('a-m', authErr(e)); $('a-d').disabled = false; }
+    };
+  }
+}
+
+sb.auth.onAuthStateChange((ev, s) => {
+  const same = user?.id && user.id === s?.user?.id;
+  user = s?.user || null;
+  if (ev === 'PASSWORD_RECOVERY') { setTimeout(() => { location.hash = '#/reset'; route(); }, 0); return; }
+  if (same && ev !== 'SIGNED_OUT') return; // renovaÁ„o de token ao voltar para a aba: n„o re-renderiza
+  if (!user && !['INITIAL_SESSION', 'SIGNED_OUT'].includes(ev)) return;
+  setTimeout(async () => { // evita travar o supabase-js dentro do callback
+    me = user ? (await sb.from('profiles').select('*').eq('id', user.id).maybeSingle()).data : null;
+    nav(); route();
+  }, 0);
+});
 window.addEventListener('hashchange', route);
 </script>
 </body>
