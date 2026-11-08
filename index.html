@@ -84,6 +84,7 @@ function nav() {
 async function route() {
   const [, page, id] = location.hash.split('/');
   window.scrollTo(0, 0);
+  stopSaves();
   try {
     if (page === 'game') return await gamePage(id);
     if (['upload', 'edit', 'admin'].includes(page)) {
@@ -156,6 +157,7 @@ async function gamePage(id) {
     <div style="margin-top:10px">${(g.tags || []).map(t => `<span class="tag">${esc(t)}</span>`).join('')}</div>
     ${isDev ? `<hr style="border:0;border-top:1px solid var(--bd);margin:14px 0"><a class="btn" href="#/edit/${g.id}">✎ Editar</a> <button class="g" style="color:var(--ac)" onclick="delGame('${g.id}')">Excluir</button>${g.zip_url ? `<p><a class="btn g" href="${esc(g.zip_url)}" download>⬇ Baixar arquivo (dev)</a></p>` : ''}` : ''}</div></div></div>`;
   if (window.pb) pb.onclick = () => play(g);
+  if (g.zip_url) saveBox(g);
   if (window.rb) rb.onclick = async () => {
     const {error} = await sb.from('reviews').upsert({game_id: id, user_id: user.id, username: uname(), rating: +rs.value, comment: rc.value}, {onConflict: 'game_id,user_id'});
     error ? alert(friendly(error)) : gamePage(id);
@@ -170,6 +172,63 @@ async function delGame(id) {
   location.hash = '#/admin'; route();
 }
 
+// ---------- Progresso salvo no navegador (sem banco de dados) ----------
+// Jogos Flash (Ruffle) e HTML5 gravam o progresso no localStorage. Aqui fazemos uma cópia por jogo no IndexedDB
+// (restaurada automaticamente se o localStorage for apagado) e permitimos exportar/importar o progresso em arquivo.
+const SAVE_SKIP = /^(sb-|pl:|supabase\.)/; // chaves do próprio site (login, contador) nunca entram no progresso
+const lsAll = () => { const o = {}; try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (!SAVE_SKIP.test(k)) o[k] = localStorage.getItem(k); } } catch (e) {} return o; };
+const idb = () => new Promise((res, rej) => { const r = indexedDB.open('fc-saves', 1); r.onupgradeneeded = () => r.result.createObjectStore('saves'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+const idbGet = async id => { try { const db = await idb(); return await new Promise((res, rej) => { const q = db.transaction('saves').objectStore('saves').get(id); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); } catch (e) { return null; } };
+const idbSet = async (id, v) => { try { const db = await idb(); await new Promise((res, rej) => { const t = db.transaction('saves', 'readwrite'); t.objectStore('saves').put(v, id); t.oncomplete = res; t.onerror = () => rej(t.error); }); } catch (e) {} };
+let saver = null;
+async function startSaves(g) {
+  stopSaves();
+  try { navigator.storage?.persist?.().catch(() => {}); } catch (e) {} // pede ao navegador para não apagar os dados do site
+  const bak = (await idbGet(g.id)) || {keys: {}};
+  try { for (const [k, v] of Object.entries(bak.keys)) if (localStorage.getItem(k) === null) localStorage.setItem(k, v); } catch (e) {} // restaura se o navegador perdeu
+  const before = lsAll();
+  const flush = async () => {
+    const now = lsAll(), ch = {};
+    for (const k in now) if (before[k] !== now[k]) ch[k] = now[k];
+    if (!Object.keys(ch).length) return false;
+    Object.assign(bak.keys, ch); Object.assign(before, ch); bak.ts = Date.now(); bak.title = g.title;
+    await idbSet(g.id, bak);
+    const s = document.getElementById('sv-s'); if (s) s.textContent = '💾 Progresso salvo às ' + new Date().toLocaleTimeString('pt-BR');
+    return true;
+  };
+  const tick = setInterval(flush, 8000), onHide = () => { if (document.visibilityState === 'hidden') flush(); };
+  document.addEventListener('visibilitychange', onHide); addEventListener('pagehide', flush);
+  saver = {g, flush, stop() { clearInterval(tick); document.removeEventListener('visibilitychange', onHide); removeEventListener('pagehide', flush); }};
+}
+function stopSaves() { if (saver) { saver.flush(); saver.stop(); saver = null; } }
+function saveBox(g) {
+  const side = app.querySelector('.cols > div:last-child'); if (!side) return;
+  side.insertAdjacentHTML('beforeend', `<div class="box"><h3 style="margin-top:0">💾 Progresso</h3><p class="cs" id="sv-i">Seu progresso é salvo automaticamente neste navegador. Se ele estiver configurado para apagar dados ao fechar, exporte o progresso para um arquivo.</p>
+  <button class="g btn" id="sv-e">⬇ Exportar</button> <button class="g btn" id="sv-im">⬆ Importar</button><input type="file" id="sv-f" accept=".json" hidden></div>`);
+  idbGet(g.id).then(b => { if (b?.ts) $('sv-i').textContent = 'Último backup: ' + new Date(b.ts).toLocaleString('pt-BR') + '. Salvo automaticamente neste navegador.'; });
+  $('sv-e').onclick = async () => {
+    if (saver?.g.id === g.id) await saver.flush();
+    const b = await idbGet(g.id);
+    if (!b || !Object.keys(b.keys || {}).length) return alert('Ainda não há progresso deste jogo. Jogue e salve dentro do jogo primeiro.');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify({app: 'flash-classics', game: g.id, title: g.title, ts: b.ts, keys: b.keys})], {type: 'application/json'}));
+    a.download = 'progresso-' + g.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.json'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  };
+  $('sv-im').onclick = () => $('sv-f').click();
+  $('sv-f').onchange = async e => {
+    const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+    try {
+      const d = JSON.parse(await f.text()), ks = Object.entries(d.keys || {}).filter(([k, v]) => typeof v === 'string' && !SAVE_SKIP.test(k));
+      if (d.app !== 'flash-classics' || !ks.length) throw new Error('Arquivo de progresso inválido.');
+      if (!confirm(`Importar o progresso de “${d.title || 'jogo'}” e substituir o atual neste navegador?`)) return;
+      stopSaves();
+      for (const [k, v] of ks) localStorage.setItem(k, v);
+      const b = (await idbGet(g.id)) || {keys: {}}; Object.assign(b.keys, Object.fromEntries(ks)); b.ts = Date.now(); b.title = g.title; await idbSet(g.id, b);
+      alert('Progresso importado! Clique em “Jogar agora” para continuar de onde parou.'); gamePage(g.id);
+    } catch (err) { alert(friendly(err)); }
+  };
+}
+
 // ---------- Jogar ----------
 function countPlay(g) { // conta 1 jogada por navegador a cada 30 min
   try { const k = 'pl:' + g.id, t = +localStorage.getItem(k) || 0; if (Date.now() - t < 1800000) return; localStorage.setItem(k, Date.now()); } catch (e) {}
@@ -179,10 +238,11 @@ async function play(g) {
   const btn = document.getElementById('pb'); btn.disabled = true; btn.textContent = 'Carregando…';
   try {
     countPlay(g);
+    await startSaves(g);
     if (g.kind === 'html5') return await playHtml5(g);
     if (!window.RufflePlayer) throw new Error('O emulador Ruffle não carregou. Verifique a conexão ou desative bloqueadores de anúncios.');
     document.getElementById('pl').innerHTML = `<div id="rf" style="width:100%;max-width:900px;aspect-ratio:${g.width}/${g.height};margin:0 auto"></div>
-    <div style="padding:8px;background:#111"><button id="fs">⛶ Tela cheia</button></div>`;
+    <div style="padding:8px;background:#111"><button id="fs">⛶ Tela cheia</button><span id="sv-s" style="color:#aaa;margin-left:12px;font-size:13px"></span></div>`;
     const player = window.RufflePlayer.newest().createPlayer();
     player.style.cssText = 'width:100%;height:100%;display:block';
     document.getElementById('rf').appendChild(player);
@@ -252,9 +312,11 @@ async function formPage(id) {
       if (f) { if (!f.name.toLowerCase().endsWith(k === 'swf' ? '.swf' : '.zip')) throw new Error(`O arquivo precisa ser ${k === 'swf' ? '.swf' : '.zip'}.`);
         if (f.size > MAX_MB * 1048576) throw new Error(`Arquivo maior que ${MAX_MB} MB.`); }
       $('f-b').disabled = true;
+      const {data: ss} = await sb.auth.getSession(); if (!ss.session) throw new Error('Sua sessão expirou. Saia e entre novamente.');
+      const {data: dv} = await sb.rpc('is_dev'); if (!dv) throw new Error('Esta conta não está como DEV no banco. Saia e entre com a conta dev (ou rode o INSERT na tabela devs).');
       const up = async (bucket, file, ct) => {
         const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 7)}-${file.name.replace(/[^\w.\-]/g, '_')}`;
-        const {error} = await sb.storage.from(bucket).upload(path, file, {contentType: ct || file.type}); if (error) throw error;
+        const {error} = await sb.storage.from(bucket).upload(path, file, {contentType: ct || file.type}); if (error) throw new Error(`Falha ao enviar "${file.name}" para o bucket "${bucket}": ${error.message}`);
         return sb.storage.from(bucket).getPublicUrl(path).data.publicUrl;
       };
       const msg = t => $('f-m').textContent = t;
@@ -270,7 +332,7 @@ async function formPage(id) {
       if (f) { msg('Enviando jogo…'); row.zip_url = await up('games', f, k === 'swf' ? 'application/x-shockwave-flash' : 'application/zip'); }
       msg('Salvando…');
       const q = E ? sb.from('games').update(row).eq('id', id) : sb.from('games').insert(row);
-      const {data, error} = await q.select().single(); if (error) throw error;
+      const {data, error} = await q.select().single(); if (error) throw new Error('Falha ao salvar o jogo no banco: ' + error.message);
       if (E) { if (cv) await rmFile('covers', oldCover); if (f) await rmFile('games', oldFile); for (const s of removed) await rmFile('screens', s); }
       location.hash = '#/game/' + data.id;
     } catch (e) { $('f-m').textContent = friendly(e); $('f-b').disabled = false; }
@@ -290,7 +352,7 @@ async function adminPage() {
   <td>${g.rating_count ? Number(g.rating_avg).toFixed(1) + ' (' + g.rating_count + ')' : '—'}</td><td><input type="checkbox" ${g.featured ? 'checked' : ''} onchange="toggleFeat('${g.id}',this.checked)"></td>
   <td style="white-space:nowrap"><a class="btn g" href="#/edit/${g.id}">✎</a> <button class="g btn" style="color:var(--ac)" onclick="delGame('${g.id}')">🗑</button></td></tr>`).join('')}</table>${data.length ? '' : '<p>Nenhum jogo ainda.</p>'}</div>`;
   $('bb').onclick = async () => {
-    const fs = [...$('bi').files]; if (!fs.length) return; $('bb').disabled = true; let ok = 0;
+    const fs = [...$('bi').files]; if (!fs.length) return; $('bb').disabled = true; let ok = 0; const fails = [];
     for (const [i, f] of fs.entries()) {
       try {
         flash('bm', `Importando ${i + 1}/${fs.length}: ${f.name}`, 1);
@@ -300,9 +362,9 @@ async function adminPage() {
         const url = sb.storage.from('games').getPublicUrl(path).data.publicUrl;
         const {error: ie} = await sb.from('games').insert({title: f.name.replace(/\.swf$/i, '').replace(/[_\-]+/g, ' ').trim(), kind: 'swf', genre: 'Outros', zip_url: url, width: 550, height: 400}); if (ie) throw ie;
         ok++;
-      } catch (e) { console.warn(f.name, e); }
+      } catch (e) { fails.push(`${f.name}: ${friendly(e)}`); }
     }
-    alert(`${ok} de ${fs.length} jogos importados.`); adminPage();
+    alert(`${ok} de ${fs.length} jogos importados.` + (fails.length ? '\n\nErros:\n' + fails.slice(0, 5).join('\n') : '')); adminPage();
   };
 }
 
@@ -314,8 +376,8 @@ const uname = () => me?.username || user?.user_metadata?.username || user?.user_
 const USER_RE = /^[a-z0-9_]{3,20}$/;
 const pwOk = (p, c) => p.length < 8 ? 'A senha precisa ter pelo menos 8 caracteres.' : (!/[a-zA-Z]/.test(p) || !/\d/.test(p)) ? 'Use letras e números na senha.' : p !== c ? 'As senhas não coincidem.' : '';
 const strength = p => { let n = 0; if (p.length >= 8) n++; if (p.length >= 12) n++; if (/[a-z]/.test(p) && /[A-Z]/.test(p)) n++; if (/\d/.test(p)) n++; if (/[^\w]/.test(p)) n++; return ['Muito fraca', 'Fraca', 'Razoável', 'Boa', 'Forte', 'Excelente'][n]; };
-const authErr = e => { const m = e?.message || ''; return /Invalid login/i.test(m) ? 'E-mail ou senha incorretos.' : /already registered/i.test(m) ? 'Este e-mail já está cadastrado.' : /rate limit|too many|security purposes/i.test(m) ? 'Muitas tentativas. Aguarde alguns minutos.' : /same password|different from the old/i.test(m) ? 'A nova senha deve ser diferente da atual.' : friendly(e); };
-const taken = async (name, except) => { const {data} = await sb.from('profiles').select('id').eq('username', name).maybeSingle(); return !!data && data.id !== except; };
+const authErr = e => { const m = e?.message || ''; return /Database error saving new user/i.test(m) ? 'Erro no banco ao criar o perfil. Rode o accounts.sql inteiro no SQL Editor do Supabase.' : /sending (confirmation|recovery|magic)? ?e?mail|error sending/i.test(m) ? 'O Supabase não conseguiu enviar o e-mail de confirmação (limite do envio padrão). Desative "Confirm email" em Authentication → Providers → Email para testar, ou configure um SMTP.' : /Invalid login/i.test(m) ? 'E-mail ou senha incorretos.' : /already registered/i.test(m) ? 'Este e-mail já está cadastrado.' : /rate limit|too many|security purposes/i.test(m) ? 'Muitas tentativas. Aguarde alguns minutos.' : /same password|different from the old/i.test(m) ? 'A nova senha deve ser diferente da atual.' : friendly(e); };
+const taken = async (name, except) => { const {data, error} = await sb.from('profiles').select('id').eq('username', name).maybeSingle(); if (error) throw new Error('A tabela "profiles" não existe no Supabase. Rode o arquivo accounts.sql no SQL Editor.'); return !!data && data.id !== except; };
 const pwField = (id, label, meter) => `<label>${label}</label><div style="position:relative"><input id="${id}" type="password" autocomplete="${id.endsWith('-c') ? 'current-password' : 'new-password'}" style="width:100%;padding-right:46px"><button type="button" data-t="${id}" class="g btn" style="position:absolute;right:3px;top:3px;padding:5px 8px">👁</button></div>${meter ? `<small class="cs" id="${id}-s"></small>` : ''}`;
 const meter = id => { $(id).oninput = e => $(id + '-s').textContent = e.target.value ? 'Força: ' + strength(e.target.value) : ''; };
 const box = (title, body, w = 420) => `<div class="box f" style="max-width:${w}px;margin:30px auto"><h2 style="margin-top:0">${title}</h2>${body}</div>`;
@@ -433,7 +495,7 @@ async function settingsPage(tab) {
           const old = av; av = sb.storage.from('avatars').getPublicUrl(path).data.publicUrl; if (old) await rmFile('avatars', old); }
         const row = {id: user.id, username: name, display_name: $('s-n').value.trim(), bio: $('s-b').value, website: site, avatar_url: av};
         const {error} = await sb.from('profiles').upsert(row); if (error) throw error;
-        if (name !== p.username) { await sb.from('games').update({author: name}).eq('user_id', user.id); await sb.from('reviews').update({username: name}).eq('user_id', user.id); }
+        if (name !== p.username) { await sb.from('reviews').update({username: name}).eq('user_id', user.id); }
         me = {...me, ...row}; nav(); flash('s-m', 'Perfil salvo!', 1);
       } catch (e) { flash('s-m', authErr(e)); }
       $('s-s').disabled = false;
