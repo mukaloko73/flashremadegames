@@ -52,8 +52,8 @@ h3{margin:18px 0 8px}
 <script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
 <script>
 // ====== CONFIG: cole os dados do seu projeto Supabase (Project Settings > API) ======
-const SB_URL = 'https://iujervnsbozespphjhcm.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml1amVydm5zYm96ZXNwcGhqaGNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwNTIwNDUsImV4cCI6MjA4OTYyODA0NX0.OUGDyjbUnqpHY48fOz0Ulzs57P2rYvZcEXMf-ivghMo';
+const SB_URL = 'COLE_AQUI_A_PROJECT_URL';
+const SB_KEY = 'COLE_AQUI_A_ANON_PUBLIC_KEY';
 const SITE_NAME = 'Flash Classics';
 const CONTACT_EMAIL = 'contato@seusite.com'; // aparece no rodapé (contato / remoção de conteúdo)
 const MAX_MB = 50; // limite por arquivo no plano grátis do Supabase
@@ -67,7 +67,7 @@ const safeUrl = u => { try { return ['http:','https:'].includes(new URL(u).proto
 const rmFile = async (bucket, url) => { try { const p = decodeURIComponent((url || '').split(`/object/public/${bucket}/`)[1] || ''); if (p) await sb.storage.from(bucket).remove([p]); } catch (e) {} };
 const friendly = e => { const m = e?.message || String(e); return /upstream connect|failed to fetch|networkerror|reset reason|111/i.test(m) ? 'Não foi possível conectar ao Supabase. Veja se o projeto está pausado (Dashboard → Restore project) e se a SB_URL está correta.' : m; };
 const MIME = {html:'text/html',js:'text/javascript',mjs:'text/javascript',css:'text/css',json:'application/json',png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',gif:'image/gif',svg:'image/svg+xml',webp:'image/webp',mp3:'audio/mpeg',ogg:'audio/ogg',wav:'audio/wav',wasm:'application/wasm',woff:'font/woff',woff2:'font/woff2',ttf:'font/ttf',txt:'text/plain',mp4:'video/mp4',webm:'video/webm'};
-let user = null, isDev = false, F = {q: '', cat: '', series: '', sort: 'created_at', limit: 48};
+let user = null, isDev = false, isOwner = false, F = {q: '', cat: '', series: '', sort: 'created_at', limit: 48};
 const setF = (k, v) => { F[k] = v; if (k !== 'limit') F.limit = 48; home(); };
 
 document.title = SITE_NAME;
@@ -77,7 +77,7 @@ document.getElementById('hq').addEventListener('keydown', e => { if (e.key === '
 
 function nav() {
   document.getElementById('nav').innerHTML = user
-    ? `${isDev ? '<a class="btn" href="#/upload">+ Adicionar jogo</a><a class="btn g" style="color:#fff" href="#/admin">Painel</a>' : ''}<a class="btn g" style="color:#fff;display:flex;align-items:center;gap:6px" href="#/settings">${me?.avatar_url ? `<img src="${esc(me.avatar_url)}" style="width:20px;height:20px;border-radius:50%;object-fit:cover">` : '⚙'} ${esc(uname())}</a><button class="g btn" style="color:#fff" onclick="sb.auth.signOut()">Sair</button>`
+    ? `${isDev ? '<a class="btn" href="#/upload">+ Adicionar jogo</a><a class="btn g" style="color:#fff" href="#/admin">Painel</a><a class="btn g" style="color:#fff" href="#/users">Usuários</a>' : ''}<a class="btn g" style="color:#fff;display:flex;align-items:center;gap:6px" href="#/settings">${me?.avatar_url ? `<img src="${esc(me.avatar_url)}" style="width:20px;height:20px;border-radius:50%;object-fit:cover">` : '⚙'} ${esc(uname())}</a><button class="g btn" style="color:#fff" onclick="sb.auth.signOut()">Sair</button>`
     : `<a class="btn g" style="color:#fff" href="#/login">Entrar</a><a class="btn" href="#/register">Criar conta</a>`;
 }
 
@@ -87,10 +87,10 @@ async function route() {
   stopSaves();
   try {
     if (page === 'game') return await gamePage(id);
-    if (['upload', 'edit', 'admin'].includes(page)) {
+    if (['upload', 'edit', 'admin', 'users'].includes(page)) {
       if (!user) return (location.hash = '#/login');
       if (!isDev) return (location.hash = '#/');
-      return page === 'admin' ? await adminPage() : await formPage(page === 'edit' ? id : null);
+      return page === 'admin' ? await adminPage() : page === 'users' ? await usersPage() : await formPage(page === 'edit' ? id : null);
     }
     if (['login', 'register', 'forgot'].includes(page) && user) return (location.hash = '#/');
     if (page === 'login') return loginPage();
@@ -144,7 +144,7 @@ async function gamePage(id) {
     ${g.controls ? `<div class="box"><h3 style="margin-top:0">Como jogar</h3><div class="desc">${esc(g.controls)}</div></div>` : ''}
     ${g.screenshots?.length ? `<div class="box"><h3 style="margin-top:0">Capturas de tela</h3><div class="shots">${g.screenshots.map(s => `<img src="${esc(s)}" onclick="window.open(this.src)">`).join('')}</div></div>` : ''}
     <div class="box"><h3 style="margin-top:0">Avaliações (${rv.length}) <span class="stars">${avg ? stars(avg) + ' ' + avg.toFixed(1) : ''}</span></h3>
-    ${user ? `<select id="rs">${[5, 4, 3, 2, 1].map(n => `<option value="${n}" ${mineR?.rating === n ? 'selected' : ''}>${stars(n)}</option>`).join('')}</select>
+    ${user && me?.banned ? '<p class="msg">Sua conta foi banida e não pode avaliar jogos.</p>' : user ? `<select id="rs">${[5, 4, 3, 2, 1].map(n => `<option value="${n}" ${mineR?.rating === n ? 'selected' : ''}>${stars(n)}</option>`).join('')}</select>
     <textarea id="rc" placeholder="Seu comentário…" style="min-height:70px;margin:8px 0">${esc(mineR?.comment)}</textarea><button id="rb">${mineR ? 'Atualizar avaliação' : 'Enviar avaliação'}</button>` : '<p><a href="#/login" style="color:var(--ac)">Entre</a> para avaliar.</p>'}
     ${rv.map(r => `<div style="border-top:1px solid var(--bd);margin-top:12px;padding-top:8px"><a href="#/u/${encodeURIComponent(r.username || '')}"><b>${esc(r.username)}</b></a> <span class="stars">${stars(r.rating)}</span>${isDev ? ` <button class="g btn" style="padding:0 8px" onclick="delReview('${r.id}','${id}')">🗑</button>` : ''}<div class="desc">${esc(r.comment)}</div></div>`).join('')}</div>
     ${rel.data?.length ? `<div class="box"><h3 style="margin-top:0">Mais de ${esc(g.series)}</h3><div class="grid">${rel.data.map(card).join('')}</div></div>` : ''}
@@ -339,11 +339,65 @@ async function formPage(id) {
   };
 }
 
+// ---------- Controle de usuários (painel do dev) ----------
+let U = {q: '', rows: [], done: false};
+async function usersPage(more) {
+  if (more !== true) U = {q: U.q || '', rows: [], done: false};
+  const {data, error} = await sb.rpc('admin_list_users', {p_q: U.q, p_lim: 50, p_off: U.rows.length}); if (error) throw error;
+  U.rows.push(...data); U.done = data.length < 50;
+  const tg = (t, c) => `<span class="tag" style="background:${c};color:#fff;border-color:${c}">${t}</span>`;
+  const dt = d => d ? new Date(d).toLocaleDateString('pt-BR') : '—';
+  const row = u => {
+    const self = u.uid === user.id, locked = self || u.owner || (u.dev && !isOwner), id = u.uid;
+    const acts = locked ? '<span class="cs">' + (self ? 'você' : '—') + '</span>'
+      : `<button class="g btn" onclick="uAct('ban','${id}')">${u.banned ? 'Desbanir' : 'Banir'}</button> <button class="g btn" onclick="uAct('clear','${id}')">Limpar aval.</button>
+         ${isOwner ? `<button class="g btn" onclick="uAct('dev','${id}')">${u.dev ? 'Remover dev' : 'Tornar dev'}</button>` : ''} <button class="g btn" style="color:var(--ac)" onclick="uAct('del','${id}')">Excluir</button>`;
+    return `<tr><td>${avatar({avatar_url: u.avatar, username: u.uname || u.mail || '?'}, 32)}</td>
+    <td>${u.uname ? `<a href="#/u/${encodeURIComponent(u.uname)}"><b>${esc(u.uname)}</b></a>` : '<span class="cs">sem perfil</span>'}${u.dname ? `<div class="cs">${esc(u.dname)}</div>` : ''}</td>
+    <td>${esc(u.mail)}</td><td>${dt(u.joined)}</td><td>${dt(u.last_login)}</td><td>${u.nreviews}</td>
+    <td>${u.owner ? tg('DONO', '#8e44ad') : u.dev ? tg('DEV', '#2980b9') : ''}${u.banned ? tg('BANIDO', '#c0392b') : ''}${u.banned && u.ban_reason ? `<div class="cs">${esc(u.ban_reason)}</div>` : ''}</td>
+    <td style="white-space:nowrap">${acts}</td></tr>`;
+  };
+  app.innerHTML = `<h2 style="margin-top:0">Usuários</h2><p><a class="btn g" href="#/admin">← Painel</a></p>
+  <div class="bar"><input id="uq" placeholder="Buscar por e-mail ou nome de usuário…" value="${esc(U.q)}"><button id="ub2">Buscar</button></div>
+  <div class="box" style="overflow-x:auto"><table class="tb"><tr><td></td><td><b>Usuário</b></td><td><b>E-mail</b></td><td><b>Cadastro</b></td><td><b>Último acesso</b></td><td><b>Aval.</b></td><td><b>Status</b></td><td></td></tr>
+  ${U.rows.map(row).join('')}</table>${U.rows.length ? '' : '<p>Nenhum usuário encontrado.</p>'}
+  ${U.done ? '' : '<p style="text-align:center"><button onclick="usersPage(true)">Carregar mais</button></p>'}</div>
+  <p class="cs">Banido: não consegue entrar nem avaliar. Excluir apaga a conta, o perfil e as avaliações da pessoa. Devs só podem ser alterados pelo dono.</p>`;
+  const go = () => { U.q = $('uq').value.trim(); usersPage(); };
+  $('ub2').onclick = go; $('uq').addEventListener('keydown', e => e.key === 'Enter' && go());
+}
+window.uAct = async (a, id) => {
+  const u = U.rows.find(x => x.uid === id); if (!u) return;
+  const name = u.uname || u.mail;
+  try {
+    let r;
+    if (a === 'ban') {
+      let reason = null;
+      if (!u.banned) { reason = prompt(`Banir ${name}?\\nMotivo (opcional — fica visível no perfil público):`); if (reason === null) return; }
+      else if (!confirm(`Desbanir ${name}?`)) return;
+      r = await sb.rpc('admin_set_ban', {p_target: id, p_ban: !u.banned, p_reason: reason || null});
+    } else if (a === 'clear') {
+      if (!confirm(`Apagar TODAS as ${u.nreviews} avaliações de ${name}?`)) return;
+      r = await sb.rpc('admin_clear_reviews', {p_target: id});
+    } else if (a === 'dev') {
+      if (!confirm(u.dev ? `Remover o acesso de dev de ${name}?` : `Dar acesso de DEV a ${name}? Essa pessoa poderá publicar e apagar jogos e moderar usuários.`)) return;
+      r = await sb.rpc('admin_set_dev', {p_target: id, p_make: !u.dev});
+    } else if (a === 'del') {
+      if (prompt(`Excluir ${name} e todas as avaliações? Não dá para desfazer.\\nDigite EXCLUIR para confirmar:`) !== 'EXCLUIR') return;
+      await rmFile('avatars', u.avatar);
+      r = await sb.rpc('admin_delete_user', {p_target: id});
+    }
+    if (r?.error) throw r.error;
+  } catch (e) { return alert(friendly(e)); }
+  usersPage();
+};
+
 // ---------- Painel do dev ----------
 window.toggleFeat = async (id, on) => { const {error} = await sb.from('games').update({featured: on}).eq('id', id); if (error) alert(friendly(error)); };
 async function adminPage() {
   const {data, error} = await sb.from('games').select('*').order('created_at', {ascending: false}); if (error) throw error;
-  app.innerHTML = `<h2 style="margin-top:0">Painel do dev</h2><p><a class="btn" href="#/upload">+ Adicionar jogo</a></p>
+  app.innerHTML = `<h2 style="margin-top:0">Painel do dev</h2><p><a class="btn" href="#/upload">+ Adicionar jogo</a> <a class="btn g" href="#/users">👥 Usuários</a></p>
   <div class="box"><h3 style="margin-top:0">Importar vários .swf de uma vez</h3><p class="cs">Cada arquivo vira um jogo com o nome do arquivo como título. Depois é só abrir cada um em “Editar” para colocar capa, categoria e descrição.</p>
   <input id="bi" type="file" accept=".swf" multiple> <button id="bb">Importar</button><div class="msg" id="bm"></div></div>
   <div class="box" style="overflow-x:auto"><table class="tb"><tr><td></td><td><b>Jogo</b></td><td><b>Categoria</b></td><td><b>Jogadas</b></td><td><b>Nota</b></td><td><b>⭐</b></td><td></td></tr>
@@ -376,7 +430,7 @@ const uname = () => me?.username || user?.user_metadata?.username || user?.user_
 const USER_RE = /^[a-z0-9_]{3,20}$/;
 const pwOk = (p, c) => p.length < 8 ? 'A senha precisa ter pelo menos 8 caracteres.' : (!/[a-zA-Z]/.test(p) || !/\d/.test(p)) ? 'Use letras e números na senha.' : p !== c ? 'As senhas não coincidem.' : '';
 const strength = p => { let n = 0; if (p.length >= 8) n++; if (p.length >= 12) n++; if (/[a-z]/.test(p) && /[A-Z]/.test(p)) n++; if (/\d/.test(p)) n++; if (/[^\w]/.test(p)) n++; return ['Muito fraca', 'Fraca', 'Razoável', 'Boa', 'Forte', 'Excelente'][n]; };
-const authErr = e => { const m = e?.message || ''; return /Database error saving new user/i.test(m) ? 'Erro no banco ao criar o perfil. Rode o accounts.sql inteiro no SQL Editor do Supabase.' : /sending (confirmation|recovery|magic)? ?e?mail|error sending/i.test(m) ? 'O Supabase não conseguiu enviar o e-mail de confirmação (limite do envio padrão). Desative "Confirm email" em Authentication → Providers → Email para testar, ou configure um SMTP.' : /Invalid login/i.test(m) ? 'E-mail ou senha incorretos.' : /already registered/i.test(m) ? 'Este e-mail já está cadastrado.' : /rate limit|too many|security purposes/i.test(m) ? 'Muitas tentativas. Aguarde alguns minutos.' : /same password|different from the old/i.test(m) ? 'A nova senha deve ser diferente da atual.' : friendly(e); };
+const authErr = e => { const m = e?.message || ''; return /banned/i.test(m) ? 'Esta conta foi banida.' : /Database error saving new user/i.test(m) ? 'Erro no banco ao criar o perfil. Rode o accounts.sql inteiro no SQL Editor do Supabase.' : /sending (confirmation|recovery|magic)? ?e?mail|error sending/i.test(m) ? 'O Supabase não conseguiu enviar o e-mail de confirmação (limite do envio padrão). Desative "Confirm email" em Authentication → Providers → Email para testar, ou configure um SMTP.' : /Invalid login/i.test(m) ? 'E-mail ou senha incorretos.' : /already registered/i.test(m) ? 'Este e-mail já está cadastrado.' : /rate limit|too many|security purposes/i.test(m) ? 'Muitas tentativas. Aguarde alguns minutos.' : /same password|different from the old/i.test(m) ? 'A nova senha deve ser diferente da atual.' : friendly(e); };
 const taken = async (name, except) => { const {data, error} = await sb.from('profiles').select('id').eq('username', name).maybeSingle(); if (error) throw new Error('A tabela "profiles" não existe no Supabase. Rode o arquivo accounts.sql no SQL Editor.'); return !!data && data.id !== except; };
 const pwField = (id, label, meter) => `<label>${label}</label><div style="position:relative"><input id="${id}" type="password" autocomplete="${id.endsWith('-c') ? 'current-password' : 'new-password'}" style="width:100%;padding-right:46px"><button type="button" data-t="${id}" class="g btn" style="position:absolute;right:3px;top:3px;padding:5px 8px">👁</button></div>${meter ? `<small class="cs" id="${id}-s"></small>` : ''}`;
 const meter = id => { $(id).oninput = e => $(id + '-s').textContent = e.target.value ? 'Força: ' + strength(e.target.value) : ''; };
@@ -543,7 +597,8 @@ sb.auth.onAuthStateChange((ev, s) => {
   if (!user && !['INITIAL_SESSION', 'SIGNED_OUT'].includes(ev)) return;
   setTimeout(async () => { // evita travar o supabase-js dentro do callback
     me = user ? (await sb.from('profiles').select('*').eq('id', user.id).maybeSingle()).data : null;
-    isDev = user ? !!(await sb.from('devs').select('user_id').eq('user_id', user.id).maybeSingle()).data : false;
+    const dv = user ? (await sb.from('devs').select('user_id,owner').eq('user_id', user.id).maybeSingle()).data : null;
+    isDev = !!dv; isOwner = !!dv?.owner;
     nav(); route();
   }, 0);
 });
